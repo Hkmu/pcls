@@ -1,6 +1,6 @@
 ## pcls
 
-An alternative to classnames & clsx. It may be useful if you are building UI library.
+`pcls` is not a direct alternative to `classnames` or `clsx`. Its utility is primarily limited to scenarios involving the development of a UI library.
 
 ### Install
 
@@ -33,20 +33,16 @@ type Props = {
 };
 
 function Button(props) {
-  const { type, size, status, className } = props;
+  const { type, size, status, className, ...restProps } = props;
 
   // Will produce `btn btn-danger btn-md ...`
-  const cls = pcls(
-    "btn",
-    {
-      [`${size}`]: size,
-      [`${type}`]: type,
-      [`${status}`]: status,
-    },
-    className
-  );
+  const cls = pcls("btn", {
+    [`${size}`]: size,
+    [`${type}`]: type,
+    [`${status}`]: status,
+  });
 
-  return <button className={cls} {...props} />;
+  return <button className={`${cls} ${className}`} {...restProps} />;
 }
 ```
 
@@ -55,14 +51,18 @@ You can add prefix for all class names by calling `setPrefix` in the root file.
 ```typescript
 import { setPrefix } from "pcls";
 
-setPrefix("my-");
+setPrefix("bs");
+// setPrefix('antd');
+// setPrefix('spectrum');
+// setPrefix('mantine');
+// setPrefix('chakra');
 ```
 
 Then `pcls` call of the former example will produce: `my-btn my-btn-danger my-btn-md ...`.
 
 ### API
 
-#### pcls(name: string, decorators?: DecoratorsType, propClass?: string): string
+#### pcls(name: string, modifiers?: ComponentModifier): string
 
 #### setPrefix(prefix: string)
 

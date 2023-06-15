@@ -1,7 +1,7 @@
 import { setPrefix, pcls } from "..";
 
 describe("pcls without prefix", function () {
-  it("keeps object keys with truthy values", function () {
+  it("supports modifier object", function () {
     expect(
       pcls("btn", {
         a: true,
@@ -14,24 +14,35 @@ describe("pcls without prefix", function () {
     ).toBe("btn btn-a btn-f");
   });
 
-  it("support an array of decorators", function () {
+  it("supports modifier array", function () {
     expect(pcls("btn", ["primary", "danger"])).toBe(
       "btn btn-primary btn-danger"
     );
+
+    expect(
+      pcls("btn", [
+        0,
+        "default",
+        {
+          info: true,
+          danger: 0,
+        },
+        [],
+      ])
+    ).toBe("btn btn-0 btn-default btn-info");
   });
 
-  it("should be trimmed", function () {
-    expect(pcls("btn ", [" danger", "primary "], "prop-cls")).toBe(
-      "btn btn-danger btn-primary prop-cls"
+  it("should trim the result string", function () {
+    expect(pcls("btn ", [" danger", "primary "])).toBe(
+      "btn btn-danger btn-primary"
     );
   });
 
-  it("returns an empty string for an empty configuration", function () {
+  it("should return an empty string if component name is not provided", function () {
     expect(pcls("")).toBe("");
     expect(pcls(" ")).toBe("");
-    expect(pcls(" ", {})).toBe("");
-    expect(pcls(" ", null)).toBe("");
-    expect(pcls(" ", undefined, "")).toBe("");
+    expect(pcls(" ", { info: "true" })).toBe("");
+    expect(pcls(" ", ["a", "b", "c"])).toBe("");
   });
 
   it("handles all types of truthy and falsy property values as expected", function () {
@@ -59,23 +70,14 @@ describe("pcls without prefix", function () {
       "b b-nonEmptyString b-whitespace b-function b-emptyObject b-nonEmptyObject b-emptyList b-nonEmptyList b-greaterZero"
     );
   });
-
-  it("should return empty when name is empty", function () {
-    expect(pcls("")).toBe("");
-    expect(pcls(" ", {})).toBe("");
-    expect(pcls(" ", null)).toBe("");
-    expect(pcls(" ", undefined, "prop-cls")).toBe("");
-    expect(pcls(" ", { a: true }, "prop-cls")).toBe("");
-    expect(pcls(" ", ["a", "b"], "prop-cls")).toBe("");
-  });
 });
 
 describe("pcls with prefix", function () {
   beforeAll(() => {
-    setPrefix("bs-");
+    setPrefix("bs");
   });
 
-  it("keeps object keys with truthy values", function () {
+  it("supports modifier object", function () {
     expect(
       pcls("btn", {
         a: true,

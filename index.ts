@@ -1,54 +1,75 @@
-export type DecoratorsType =
-  | { [id: string]: any }
-  | Array<string>
-  | null
-  | undefined;
+export type ComponentModifier =
+  | ComponentModifierValue
+  | ComponentModifierArray
+  | ComponentModifierMapping;
+type ComponentModifierArray = Array<ComponentModifier>;
+type ComponentModifierMapping = Record<ComponentModifierValue, any>;
+type ComponentModifierValue = string | number;
 
+// The prefix for all classes.
 let _prefix: string = "";
 export function setPrefix(prefix: string) {
-  _prefix = prefix.trim();
+  if (typeof prefix !== "string") return;
+  _prefix = prefix.trim().length ? `${prefix.trim()}-` : "";
 }
 
 export function pcls(
-  name: string,
-  decorators?: DecoratorsType,
-  propCls?: string
+  componentName: string,
+  componentModifier: ComponentModifier = []
 ): string {
-  name = name.trim();
+  if (
+    typeof componentName !== "string" ||
+    !(componentName = componentName.trim()).length
+  )
+    return "";
 
-  if (!name.length) return name;
-
-  const userCls: Array<string> = [name].concat(
-    parseDecorators(name, decorators)
+  const classNames: Array<string> = [componentName].concat(
+    flatten(componentName, componentModifier)
   );
-  const prefixedCls: string = addPrefix(userCls);
 
-  return propCls ? `${prefixedCls} ${propCls}` : prefixedCls;
+  return addPrefix(classNames);
 }
 
-function parseDecorators(name: string, d: DecoratorsType): Array<string> {
-  if (!d) return [];
-
+function flatten(
+  componentName: string,
+  componentModifier: ComponentModifier
+): Array<string> {
   const ret: Array<string> = [];
 
-  if (Array.isArray(d)) {
-    for (let i = 0, l = d.length; i < l; i++) {
-      const _d = d[i].trim();
-      _d.length && ret.push(`${name}-${_d}`);
+  if (
+    typeof componentModifier === "string" ||
+    typeof componentModifier === "number"
+  ) {
+    const modifier = componentModifier.toString().trim();
+    if (modifier) {
+      ret.push(componentName + "-" + modifier);
+    }
+    return ret;
+  }
+
+  if (Array.isArray(componentModifier)) {
+    for (const modifier of componentModifier) {
+      ret.push(...flatten(componentName, modifier));
     }
 
     return ret;
   }
 
-  for (const key in d) {
-    if (d[key]) {
-      const k = key.trim();
-      k.length && ret.push(`${name}-${k}`);
+  if (typeof componentModifier === "object") {
+    for (const modifier in componentModifier) {
+      const shouldKeep = !!componentModifier[modifier];
+      if (shouldKeep) {
+        ret.push(...flatten(componentName, modifier));
+      }
     }
+    return ret;
   }
+
   return ret;
 }
 
-function addPrefix(classnames: Array<string>): string {
-  return classnames.reduce((a, b) => a + " " + _prefix + b, "").trim();
+function addPrefix(classNames: Array<string>): string {
+  return classNames
+    .reduce((final, className) => `${final} ${_prefix + className}`, "")
+    .trim();
 }
